@@ -1,0 +1,629 @@
+
+<h2 class="sr-only">Soccer Betting AI — Value & Sure Bet Analyzer</h2>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+
+  .app { display: flex; flex-direction: column; gap: 0; min-height: 600px; }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem; border-bottom: 0.5px solid var(--color-border-tertiary);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: #1D9E75; display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .logo-text { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .logo-sub { font-size: 11px; color: var(--color-text-secondary); }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #1D9E75;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .status-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+
+  /* Tabs */
+  .tabs {
+    display: flex; border-bottom: 0.5px solid var(--color-border-tertiary);
+    padding: 0 1.25rem;
+  }
+  .tab {
+    padding: 10px 16px; font-size: 13px; cursor: pointer;
+    border: none; background: none; color: var(--color-text-secondary);
+    border-bottom: 2px solid transparent; margin-bottom: -0.5px;
+  }
+  .tab.active { color: var(--color-text-primary); border-bottom-color: #1D9E75; font-weight: 500; }
+
+  /* Main sections */
+  .section { display: none; padding: 1rem 1.25rem; }
+  .section.active { display: block; }
+
+  /* Input panel */
+  .panel {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-lg); padding: 1rem; margin-bottom: 1rem;
+  }
+  .panel-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--color-text-secondary); }
+  .field input, .field select {
+    font-size: 13px; padding: 7px 10px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md); background: var(--color-background-primary);
+    color: var(--color-text-primary);
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: #1D9E75; }
+
+  /* Odds grid */
+  .odds-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .odds-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md); padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .odds-label { font-size: 11px; color: var(--color-text-secondary); }
+  .odds-bookies { display: flex; flex-direction: column; gap: 4px; }
+  .bookie-row { display: flex; justify-content: space-between; align-items: center; }
+  .bookie-name { font-size: 11px; color: var(--color-text-secondary); }
+  .bookie-odd { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .bookie-odd.best { color: #1D9E75; }
+
+  /* Analyze button */
+  .analyze-btn {
+    width: 100%; padding: 10px; font-size: 14px; font-weight: 500;
+    background: #1D9E75; color: white; border: none;
+    border-radius: var(--border-radius-md); cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .analyze-btn:hover { opacity: 0.9; }
+  .analyze-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Results */
+  .result-cards { display: flex; flex-direction: column; gap: 10px; margin-top: 1rem; }
+  .result-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg); padding: 1rem 1.25rem;
+  }
+  .result-card.value { border-left: 3px solid #1D9E75; }
+  .result-card.sure { border-left: 3px solid #378ADD; }
+  .result-card.warning { border-left: 3px solid #BA7517; }
+  .result-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .result-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 500;
+  }
+  .badge.value { background: #E1F5EE; color: #0F6E56; }
+  .badge.sure { background: #E6F1FB; color: #185FA5; }
+  .badge.warning { background: #FAEEDA; color: #854F0B; }
+  .result-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; }
+  .stat-label { font-size: 10px; color: var(--color-text-secondary); margin-bottom: 2px; }
+  .stat-val { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-val.green { color: #1D9E75; }
+  .stat-val.blue { color: #378ADD; }
+
+  /* Sure bet section */
+  .arb-form .field-row { grid-template-columns: 1fr; }
+  .bookie-inputs { display: flex; flex-direction: column; gap: 8px; }
+  .bookie-input-row { display: grid; grid-template-columns: 140px 1fr 1fr; gap: 8px; align-items: center; }
+  .bookie-input-row label { font-size: 12px; color: var(--color-text-secondary); }
+
+  /* Loading */
+  .loading { text-align: center; padding: 2rem; color: var(--color-text-secondary); font-size: 13px; }
+  .spinner {
+    width: 24px; height: 24px; border: 2px solid var(--color-border-tertiary);
+    border-top-color: #1D9E75; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* History */
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+  .history-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md); font-size: 13px;
+  }
+  .history-match { color: var(--color-text-primary); font-weight: 500; }
+  .history-meta { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .history-result { text-align: right; }
+  .ev-pos { color: #1D9E75; font-weight: 500; }
+  .ev-neg { color: #D85A30; font-weight: 500; }
+
+  /* AI Chat */
+  .chat-area { display: flex; flex-direction: column; gap: 10px; }
+  .msg { padding: 10px 12px; border-radius: var(--border-radius-md); font-size: 13px; line-height: 1.6; max-width: 90%; }
+  .msg.ai { background: var(--color-background-secondary); color: var(--color-text-primary); align-self: flex-start; }
+  .msg.user { background: #1D9E75; color: white; align-self: flex-end; }
+  .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
+  .chat-input-row input { flex: 1; }
+  .send-btn { padding: 7px 14px; background: #1D9E75; color: white; border: none; border-radius: var(--border-radius-md); cursor: pointer; font-size: 13px; }
+
+  .empty { color: var(--color-text-secondary); font-size: 13px; text-align: center; padding: 2rem 1rem; }
+
+  /* Bankroll */
+  .bankroll-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 1rem; }
+  .bank-info { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .bank-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+</style>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">⚽</div>
+      <div>
+        <div class="logo-text">BetEdge AI</div>
+        <div class="logo-sub">Soccer Intelligence Engine</div>
+      </div>
+    </div>
+    <div class="status-row">
+      <div class="status-dot"></div>
+      <span>AI Online</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('value')">Value Bets</button>
+    <button class="tab" onclick="switchTab('sure')">Sure Bets</button>
+    <button class="tab" onclick="switchTab('ai')">AI Analyst</button>
+    <button class="tab" onclick="switchTab('history')">History</button>
+  </div>
+
+  <!-- VALUE BETS TAB -->
+  <div class="section active" id="tab-value">
+    <div class="panel">
+      <div class="panel-title">Match details</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Home team</label>
+          <input id="homeTeam" placeholder="e.g. Barcelona" value="Arsenal" />
+        </div>
+        <div class="field">
+          <label>Away team</label>
+          <input id="awayTeam" placeholder="e.g. Real Madrid" value="Chelsea" />
+        </div>
+      </div>
+      <div class="field-row three">
+        <div class="field">
+          <label>League</label>
+          <select id="league">
+            <option>Premier League</option>
+            <option>La Liga</option>
+            <option>Bundesliga</option>
+            <option>Serie A</option>
+            <option>Ligue 1</option>
+            <option>Champions League</option>
+            <option>Europa League</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Match date</label>
+          <input id="matchDate" type="date" />
+        </div>
+        <div class="field">
+          <label>Bankroll (€)</label>
+          <input id="bankroll" type="number" value="1000" />
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Bookmaker odds (decimal)</div>
+      <div class="odds-grid">
+        <div class="odds-card">
+          <div class="odds-label">Home win</div>
+          <div class="odds-bookies">
+            <div class="bookie-row"><span class="bookie-name">Bet365</span><input class="bookie-odd" id="h1" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="2.20" /></div>
+            <div class="bookie-row"><span class="bookie-name">Betfair</span><input class="bookie-odd" id="h2" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="2.30" /></div>
+            <div class="bookie-row"><span class="bookie-name">Pinnacle</span><input class="bookie-odd" id="h3" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="2.15" /></div>
+          </div>
+        </div>
+        <div class="odds-card">
+          <div class="odds-label">Draw</div>
+          <div class="odds-bookies">
+            <div class="bookie-row"><span class="bookie-name">Bet365</span><input id="d1" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="3.40" /></div>
+            <div class="bookie-row"><span class="bookie-name">Betfair</span><input id="d2" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="3.50" /></div>
+            <div class="bookie-row"><span class="bookie-name">Pinnacle</span><input id="d3" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="3.30" /></div>
+          </div>
+        </div>
+        <div class="odds-card">
+          <div class="odds-label">Away win</div>
+          <div class="odds-bookies">
+            <div class="bookie-row"><span class="bookie-name">Bet365</span><input id="a1" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="3.10" /></div>
+            <div class="bookie-row"><span class="bookie-name">Betfair</span><input id="a2" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="3.20" /></div>
+            <div class="bookie-row"><span class="bookie-name">Pinnacle</span><input id="a3" style="width:60px;padding:2px 6px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:4px;" value="3.05" /></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyzeValue()">Analyze with AI ↗</button>
+    <div id="valueResults"></div>
+  </div>
+
+  <!-- SURE BETS TAB -->
+  <div class="section" id="tab-sure">
+    <div class="panel">
+      <div class="panel-title">Arbitrage calculator</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Home team</label>
+          <input id="sHomeTeam" placeholder="e.g. Liverpool" value="PSG" />
+        </div>
+        <div class="field">
+          <label>Away team</label>
+          <input id="sAwayTeam" placeholder="e.g. Man City" value="Bayern" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Total stake (€)</label>
+          <input id="sStake" type="number" value="500" />
+        </div>
+        <div class="field">
+          <label>Market type</label>
+          <select id="sMarket">
+            <option>1X2 (3-way)</option>
+            <option>Home/Away (2-way)</option>
+            <option>Over/Under</option>
+            <option>BTTS Yes/No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Best odds per outcome</div>
+      <div class="bookie-inputs" id="arbInputs">
+        <div class="bookie-input-row">
+          <label>Home win (Bet365)</label>
+          <input type="number" id="arb_h" placeholder="Best odd" value="2.40" style="padding:6px 10px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:6px;" />
+          <div style="font-size:11px;color:var(--color-text-secondary);padding-top:4px;" id="arb_h_stake">Stake: —</div>
+        </div>
+        <div class="bookie-input-row">
+          <label>Draw (Betfair)</label>
+          <input type="number" id="arb_d" placeholder="Best odd" value="3.60" style="padding:6px 10px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:6px;" />
+          <div style="font-size:11px;color:var(--color-text-secondary);padding-top:4px;" id="arb_d_stake">Stake: —</div>
+        </div>
+        <div class="bookie-input-row">
+          <label>Away win (Pinnacle)</label>
+          <input type="number" id="arb_a" placeholder="Best odd" value="3.80" style="padding:6px 10px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:6px;" />
+          <div style="font-size:11px;color:var(--color-text-secondary);padding-top:4px;" id="arb_a_stake">Stake: —</div>
+        </div>
+      </div>
+    </div>
+    <button class="analyze-btn" onclick="calcArb()">Calculate Sure Bet ↗</button>
+    <div id="arbResults"></div>
+  </div>
+
+  <!-- AI ANALYST TAB -->
+  <div class="section" id="tab-ai">
+    <div class="chat-area" id="chatArea">
+      <div class="msg ai">Hello! I'm your AI soccer betting analyst. Ask me anything — team form, head-to-head records, injury impacts, odds value, Kelly Criterion sizing, league statistics, or betting strategy. I have deep knowledge of soccer markets worldwide. What would you like to analyze?</div>
+    </div>
+    <div class="chat-input-row">
+      <input id="chatInput" placeholder="e.g. Is 2.40 on Arsenal a value bet given their home form?" onkeydown="if(event.key==='Enter')sendChat()" />
+      <button class="send-btn" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div class="section" id="tab-history">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="panel-title" style="margin:0;">Analysis history</div>
+      <button onclick="clearHistory()" style="font-size:11px;color:var(--color-text-secondary);background:none;border:none;cursor:pointer;">Clear all</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty">No analyses yet. Start by analyzing a match on the Value Bets tab.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ANTHROPIC_KEY_PLACEHOLDER = "";
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function getVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function getStr(id) { return document.getElementById(id).value.trim(); }
+
+// ==================== VALUE BETTING ====================
+async function analyzeValue() {
+  const home = getStr('homeTeam'), away = getStr('awayTeam');
+  const league = getStr('league'), bankroll = getVal('bankroll');
+  const h_odds = [getVal('h1'), getVal('h2'), getVal('h3')];
+  const d_odds = [getVal('d1'), getVal('d2'), getVal('d3')];
+  const a_odds = [getVal('a1'), getVal('a2'), getVal('a3')];
+  const best_h = Math.max(...h_odds), best_d = Math.max(...d_odds), best_a = Math.max(...a_odds);
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true; btn.textContent = 'Analyzing…';
+  const div = document.getElementById('valueResults');
+  div.innerHTML = '<div class="loading"><div class="spinner"></div>AI is analyzing odds, computing true probabilities, detecting value…</div>';
+
+  const prompt = `You are the world's best soccer betting AI analyst. Analyze this match for VALUE BETTING opportunities.
+
+Match: ${home} vs ${away} (${league})
+Bankroll: €${bankroll}
+
+Bookmaker odds (decimal):
+- Home (${home}): Best = ${best_h} | Bet365: ${h_odds[0]}, Betfair: ${h_odds[1]}, Pinnacle: ${h_odds[2]}
+- Draw: Best = ${best_d} | Bet365: ${d_odds[0]}, Betfair: ${d_odds[1]}, Pinnacle: ${d_odds[2]}
+- Away (${away}): Best = ${best_a} | Bet365: ${a_odds[0]}, Betfair: ${a_odds[1]}, Pinnacle: ${a_odds[2]}
+
+Perform a complete value betting analysis:
+1. Remove the bookmaker margin (vig) from each bookie to find their implied true probabilities
+2. Use Pinnacle (sharp bookie) as the market benchmark for true probability
+3. Compute true probability from Pinnacle (after removing ~2.5% vig)
+4. For each outcome, compute: Implied probability from best available odd, True probability from Pinnacle, Expected Value (EV%) = (true_prob × best_odd - 1) × 100
+5. Identify any value bets (EV > +3%)
+6. Apply Kelly Criterion: stake = (EV / (best_odd - 1)) × bankroll × 0.25 (quarter Kelly for safety)
+7. Assess the overall market efficiency
+8. Give a confidence-rated recommendation
+
+Respond in this EXACT JSON format only, no markdown:
+{
+  "market_vig": {"bet365": number, "betfair": number, "pinnacle": number},
+  "true_probabilities": {"home": number, "draw": number, "away": number},
+  "outcomes": [
+    {
+      "name": "Home win",
+      "team": "${home}",
+      "best_odd": ${best_h},
+      "best_bookie": "string",
+      "true_prob": number,
+      "implied_prob": number,
+      "ev_percent": number,
+      "is_value": boolean,
+      "kelly_stake": number,
+      "reasoning": "string"
+    },
+    {
+      "name": "Draw",
+      "team": "Draw",
+      "best_odd": ${best_d},
+      "best_bookie": "string",
+      "true_prob": number,
+      "implied_prob": number,
+      "ev_percent": number,
+      "is_value": boolean,
+      "kelly_stake": number,
+      "reasoning": "string"
+    },
+    {
+      "name": "Away win",
+      "team": "${away}",
+      "best_odd": ${best_a},
+      "best_bookie": "string",
+      "true_prob": number,
+      "implied_prob": number,
+      "ev_percent": number,
+      "is_value": boolean,
+      "kelly_stake": number,
+      "reasoning": "string"
+    }
+  ],
+  "market_assessment": "string",
+  "top_recommendation": "string",
+  "risk_level": "low|medium|high",
+  "confidence": number
+}`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content.map(i => i.text || "").join("").replace(/```json|```/g, "").trim();
+    const result = JSON.parse(text);
+    renderValueResults(result, home, away, bankroll);
+    saveHistory({ type: 'value', home, away, league, result, ts: Date.now() });
+  } catch(e) {
+    div.innerHTML = '<div class="result-card warning"><div class="result-header"><span class="result-title">Analysis error</span><span class="badge warning">Error</span></div><div class="result-body">Could not connect to AI. Check your connection and try again. ' + e.message + '</div></div>';
+  }
+  btn.disabled = false; btn.textContent = 'Analyze with AI ↗';
+}
+
+function renderValueResults(r, home, away, bankroll) {
+  const div = document.getElementById('valueResults');
+  const valueBets = r.outcomes.filter(o => o.is_value);
+  let html = '<div class="result-cards">';
+
+  // Market overview
+  html += `<div class="result-card">
+    <div class="result-header"><span class="result-title">Market analysis — ${home} vs ${away}</span><span class="badge ${r.risk_level === 'low' ? 'value' : r.risk_level === 'medium' ? 'warning' : 'sure'}">${r.risk_level} risk</span></div>
+    <div class="result-body">${r.market_assessment}</div>
+    <div class="result-stats">
+      <div class="stat"><div class="stat-label">Pinnacle vig</div><div class="stat-val">${(r.market_vig?.pinnacle||2.5).toFixed(1)}%</div></div>
+      <div class="stat"><div class="stat-label">Value bets found</div><div class="stat-val ${valueBets.length > 0 ? 'green' : ''}">${valueBets.length}</div></div>
+      <div class="stat"><div class="stat-label">AI confidence</div><div class="stat-val">${r.confidence}%</div></div>
+    </div>
+  </div>`;
+
+  // Each outcome
+  r.outcomes.forEach(o => {
+    const evColor = o.ev_percent > 0 ? 'green' : 'ev-neg';
+    const cardType = o.is_value ? 'value' : '';
+    html += `<div class="result-card ${cardType}">
+      <div class="result-header">
+        <span class="result-title">${o.name} ${o.is_value ? '— value detected' : ''}</span>
+        <span class="badge ${o.is_value ? 'value' : 'warning'}">${o.is_value ? 'VALUE BET' : 'no edge'}</span>
+      </div>
+      <div class="result-body">${o.reasoning}</div>
+      <div class="result-stats">
+        <div class="stat"><div class="stat-label">Best odd</div><div class="stat-val blue">${o.best_odd.toFixed(2)}</div></div>
+        <div class="stat"><div class="stat-label">EV%</div><div class="stat-val ${o.ev_percent > 0 ? 'green' : ''}">${o.ev_percent > 0 ? '+' : ''}${o.ev_percent.toFixed(1)}%</div></div>
+        <div class="stat"><div class="stat-label">True prob</div><div class="stat-val">${(o.true_prob * 100).toFixed(1)}%</div></div>
+      </div>
+      ${o.is_value ? `<div style="margin-top:10px;padding:8px 10px;background:var(--color-background-secondary);border-radius:6px;font-size:12px;color:var(--color-text-secondary);">
+        Kelly stake (¼ Kelly): <strong style="color:#1D9E75;">€${o.kelly_stake.toFixed(0)}</strong> on <strong>${o.name}</strong> @ <strong>${o.best_odd.toFixed(2)}</strong> with ${o.best_bookie}
+      </div>` : ''}
+    </div>`;
+  });
+
+  // Top recommendation
+  html += `<div class="result-card sure">
+    <div class="result-header"><span class="result-title">AI recommendation</span><span class="badge sure">AI insight</span></div>
+    <div class="result-body">${r.top_recommendation}</div>
+  </div>`;
+
+  html += '</div>';
+  div.innerHTML = html;
+}
+
+// ==================== SURE BETS ====================
+function calcArb() {
+  const stake = getVal('sStake');
+  const market = getStr('sMarket');
+  const home = getStr('sHomeTeam'), away = getStr('sAwayTeam');
+  const oh = getVal('arb_h'), od = getVal('arb_d'), oa = getVal('arb_a');
+
+  const is3way = market === '1X2 (3-way)';
+  const implied = is3way
+    ? (1/oh + 1/od + 1/oa)
+    : (1/oh + 1/oa);
+
+  const div = document.getElementById('arbResults');
+
+  if (implied < 1) {
+    const profit = stake * (1/implied - 1);
+    const profitPct = (1/implied - 1) * 100;
+    const sh = (stake / implied) / oh;
+    const sd = is3way ? (stake / implied) / od : 0;
+    const sa = (stake / implied) / oa;
+
+    document.getElementById('arb_h_stake').textContent = `Stake: €${sh.toFixed(2)}`;
+    if(is3way) document.getElementById('arb_d_stake').textContent = `Stake: €${sd.toFixed(2)}`;
+    document.getElementById('arb_a_stake').textContent = `Stake: €${sa.toFixed(2)}`;
+
+    div.innerHTML = `<div class="result-cards">
+      <div class="result-card sure">
+        <div class="result-header"><span class="result-title">Sure bet found — ${home} vs ${away}</span><span class="badge sure">ARBITRAGE</span></div>
+        <div class="result-body">A guaranteed profit opportunity exists across these bookmakers. Place stakes as shown below — regardless of match outcome, you profit.</div>
+        <div class="result-stats">
+          <div class="stat"><div class="stat-label">Guaranteed profit</div><div class="stat-val blue">€${profit.toFixed(2)}</div></div>
+          <div class="stat"><div class="stat-label">Return %</div><div class="stat-val blue">+${profitPct.toFixed(2)}%</div></div>
+          <div class="stat"><div class="stat-label">Total sum</div><div class="stat-val">${(implied*100).toFixed(1)}%</div></div>
+        </div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+          <div style="padding:8px 10px;background:var(--color-background-secondary);border-radius:6px;font-size:12px;">Home win: bet <strong style="color:#378ADD;">€${sh.toFixed(2)}</strong> @ ${oh}</div>
+          ${is3way ? `<div style="padding:8px 10px;background:var(--color-background-secondary);border-radius:6px;font-size:12px;">Draw: bet <strong style="color:#378ADD;">€${sd.toFixed(2)}</strong> @ ${od}</div>` : ''}
+          <div style="padding:8px 10px;background:var(--color-background-secondary);border-radius:6px;font-size:12px;">Away win: bet <strong style="color:#378ADD;">€${sa.toFixed(2)}</strong> @ ${oa}</div>
+        </div>
+      </div>
+      <div class="result-card warning">
+        <div class="result-header"><span class="result-title">Important warnings</span><span class="badge warning">Risk notice</span></div>
+        <div class="result-body">Act quickly — arbitrage windows close fast. Bet limits may restrict stake sizes. Some bookmakers restrict or ban arbitrage bettors. Always verify odds before placing bets. Round stakes to avoid detection.</div>
+      </div>
+    </div>`;
+  } else {
+    document.getElementById('arb_h_stake').textContent = 'Stake: —';
+    document.getElementById('arb_d_stake').textContent = 'Stake: —';
+    document.getElementById('arb_a_stake').textContent = 'Stake: —';
+    div.innerHTML = `<div class="result-cards"><div class="result-card warning">
+      <div class="result-header"><span class="result-title">No arbitrage opportunity</span><span class="badge warning">Over-round</span></div>
+      <div class="result-body">The implied probability sum is <strong>${(implied*100).toFixed(1)}%</strong> — above 100%, meaning the bookmakers have a built-in margin. No guaranteed profit is possible at these odds. Try adjusting odds or sourcing better prices from more bookmakers.</div>
+    </div></div>`;
+  }
+}
+
+// ==================== AI ANALYST CHAT ====================
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const area = document.getElementById('chatArea');
+  area.innerHTML += `<div class="msg user">${msg}</div>`;
+  area.innerHTML += `<div class="msg ai" id="typing">Thinking…</div>`;
+  area.scrollTop = area.scrollHeight;
+
+  const systemPrompt = `You are the world's best soccer betting AI analyst with deep expertise in:
+- Value betting, Kelly Criterion, bankroll management
+- Arbitrage/sure betting strategies  
+- All major soccer leagues globally (Premier League, La Liga, Bundesliga, Serie A, Ligue 1, Champions League, etc.)
+- Team form, head-to-head statistics, injury analysis
+- Odds movement, bookmaker margin calculation, sharp vs soft books
+- Poisson distribution for goal prediction, expected goals (xG)
+- Market efficiency and when to bet
+- Risk management and staking plans
+
+Give concrete, data-driven answers. Be direct and actionable. Use numbers wherever possible.`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: msg }]
+      })
+    });
+    const data = await res.json();
+    const reply = data.content.map(i => i.text || "").join("");
+    document.getElementById('typing').textContent = reply;
+    document.getElementById('typing').removeAttribute('id');
+  } catch(e) {
+    document.getElementById('typing').textContent = 'Connection error. Please try again.';
+    document.getElementById('typing').removeAttribute('id');
+  }
+  area.scrollTop = area.scrollHeight;
+}
+
+// ==================== HISTORY ====================
+function saveHistory(entry) {
+  const history = JSON.parse(localStorage.getItem('betedge_history') || '[]');
+  history.unshift(entry);
+  if (history.length > 20) history.pop();
+  localStorage.setItem('betedge_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('betedge_history') || '[]');
+  const div = document.getElementById('historyList');
+  if (!history.length) { div.innerHTML = '<div class="empty">No analyses yet.</div>'; return; }
+  div.innerHTML = history.map(h => {
+    const d = new Date(h.ts);
+    const topEV = h.result?.outcomes ? Math.max(...h.result.outcomes.map(o => o.ev_percent)) : null;
+    const evStr = topEV !== null ? `<div class="${topEV > 0 ? 'ev-pos' : 'ev-neg'}">${topEV > 0 ? '+' : ''}${topEV.toFixed(1)}% EV</div>` : '';
+    return `<div class="history-item">
+      <div><div class="history-match">${h.home} vs ${h.away}</div><div class="history-meta">${h.league || ''} · ${d.toLocaleDateString()}</div></div>
+      <div class="history-result">${evStr}<div style="font-size:11px;color:var(--color-text-secondary);">${h.type === 'value' ? 'Value analysis' : 'Sure bet'}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function clearHistory() {
+  localStorage.removeItem('betedge_history');
+  renderHistory();
+}
+
+// Init
+document.getElementById('matchDate').valueAsDate = new Date();
+renderHistory();
+</script>
