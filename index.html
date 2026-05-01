@@ -416,7 +416,6 @@ Respond in this EXACT JSON format only, no markdown:
 }`;
 
   try {
-    // UPDATED ROUTING HERE
     const res = await fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -426,7 +425,12 @@ Respond in this EXACT JSON format only, no markdown:
         messages: [{ role: "user", content: prompt }]
       })
     });
+    
     const data = await res.json();
+    
+    // --> DEBUG LINE ADDED HERE <--
+    console.log("ANTHROPIC RESPONSE (VALUE BET):", data); 
+    
     const text = data.content.map(i => i.text || "").join("").replace(/```json|```/g, "").trim();
     const result = JSON.parse(text);
     renderValueResults(result, home, away, bankroll);
@@ -565,7 +569,6 @@ async function sendChat() {
 Give concrete, data-driven answers. Be direct and actionable. Use numbers wherever possible.`;
 
   try {
-    // UPDATED ROUTING HERE
     const res = await fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -576,7 +579,12 @@ Give concrete, data-driven answers. Be direct and actionable. Use numbers wherev
         messages: [{ role: "user", content: msg }]
       })
     });
+    
     const data = await res.json();
+    
+    // --> DEBUG LINE ADDED HERE <--
+    console.log("ANTHROPIC RESPONSE (CHAT):", data);
+    
     const reply = data.content.map(i => i.text || "").join("");
     document.getElementById('typing').textContent = reply;
     document.getElementById('typing').removeAttribute('id');
