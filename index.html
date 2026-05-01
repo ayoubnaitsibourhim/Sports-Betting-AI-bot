@@ -1,4 +1,3 @@
-
 <h2 class="sr-only">Soccer Betting AI — Value & Sure Bet Analyzer</h2>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -157,7 +156,6 @@
 </style>
 
 <div class="app">
-  <!-- Header -->
   <div class="header">
     <div class="logo">
       <div class="logo-icon">⚽</div>
@@ -172,7 +170,6 @@
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" onclick="switchTab('value')">Value Bets</button>
     <button class="tab" onclick="switchTab('sure')">Sure Bets</button>
@@ -180,7 +177,6 @@
     <button class="tab" onclick="switchTab('history')">History</button>
   </div>
 
-  <!-- VALUE BETS TAB -->
   <div class="section active" id="tab-value">
     <div class="panel">
       <div class="panel-title">Match details</div>
@@ -252,7 +248,6 @@
     <div id="valueResults"></div>
   </div>
 
-  <!-- SURE BETS TAB -->
   <div class="section" id="tab-sure">
     <div class="panel">
       <div class="panel-title">Arbitrage calculator</div>
@@ -306,7 +301,6 @@
     <div id="arbResults"></div>
   </div>
 
-  <!-- AI ANALYST TAB -->
   <div class="section" id="tab-ai">
     <div class="chat-area" id="chatArea">
       <div class="msg ai">Hello! I'm your AI soccer betting analyst. Ask me anything — team form, head-to-head records, injury impacts, odds value, Kelly Criterion sizing, league statistics, or betting strategy. I have deep knowledge of soccer markets worldwide. What would you like to analyze?</div>
@@ -317,7 +311,6 @@
     </div>
   </div>
 
-  <!-- HISTORY TAB -->
   <div class="section" id="tab-history">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div class="panel-title" style="margin:0;">Analysis history</div>
@@ -330,8 +323,6 @@
 </div>
 
 <script>
-const ANTHROPIC_KEY_PLACEHOLDER = "";
-
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -425,11 +416,12 @@ Respond in this EXACT JSON format only, no markdown:
 }`;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    // UPDATED ROUTING HERE
+    const res = await fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: 1000,
         messages: [{ role: "user", content: prompt }]
       })
@@ -573,11 +565,12 @@ async function sendChat() {
 Give concrete, data-driven answers. Be direct and actionable. Use numbers wherever possible.`;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    // UPDATED ROUTING HERE
+    const res = await fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: "user", content: msg }]
