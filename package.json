@@ -1,0 +1,22 @@
+{
+  "name": "sports-betting-ai-bot",
+  "version": "1.0.0",
+  "description": "Soccer Betting AI — Value & Sure Bet Analyzer",
+  "type": "module",
+  "scripts": {
+    "dev": "npx vercel dev",
+    "build": "echo 'Static HTML - no build step required'",
+    "lint": "echo 'No linting configured yet'"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "sports-betting",
+    "ai",
+    "analytics"
+  ],
+  "author": "",
+  "license": "MIT"
+}
