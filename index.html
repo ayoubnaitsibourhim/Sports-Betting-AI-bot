@@ -420,16 +420,14 @@ Respond in this EXACT JSON format only, no markdown:
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1000,
         messages: [{ role: "user", content: prompt }]
       })
     });
     
     const data = await res.json();
     
-    // --> DEBUG LINE ADDED HERE <--
-    console.log("ANTHROPIC RESPONSE (VALUE BET):", data); 
+    // --> CLEANED DEBUG LINE <--
+    console.log("GEMINI RESPONSE (VALUE BET):", data); 
     
     const text = data.content.map(i => i.text || "").join("").replace(/```json|```/g, "").trim();
     const result = JSON.parse(text);
@@ -573,8 +571,6 @@ Give concrete, data-driven answers. Be direct and actionable. Use numbers wherev
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: "user", content: msg }]
       })
@@ -582,8 +578,8 @@ Give concrete, data-driven answers. Be direct and actionable. Use numbers wherev
     
     const data = await res.json();
     
-    // --> DEBUG LINE ADDED HERE <--
-    console.log("ANTHROPIC RESPONSE (CHAT):", data);
+    // --> CLEANED DEBUG LINE <--
+    console.log("GEMINI RESPONSE (CHAT):", data);
     
     const reply = data.content.map(i => i.text || "").join("");
     document.getElementById('typing').textContent = reply;
